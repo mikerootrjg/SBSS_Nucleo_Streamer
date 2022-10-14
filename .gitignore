@@ -1,3 +1,14 @@
+## Eclipse (CubeIDE) specific ignores
+
+.metadata
+.settings/
+Debug
+Release
+*.launch
+.cproject
+
+## Below this is github's templage for C project gitignore
+ 
 # Prerequisites
 *.d
 
