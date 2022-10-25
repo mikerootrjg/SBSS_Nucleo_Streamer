@@ -28,6 +28,7 @@ For PA1:
 | FS          | GPIO Input   | PD5       | CN11 Pin 41 |
 | SS          | GPIO Input   | PD6       | CN11 Pin 43 |
 | SR          | GPIO Input   | PD7       | CN11 Pin 45 |
+| Data Out    | UART_TX      | PD1       | CN11 Pin 55 or CN9 Pin 27
 
 ## Output
 
