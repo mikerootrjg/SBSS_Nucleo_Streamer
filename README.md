@@ -35,7 +35,8 @@ For PA1:
 FW sends out 1000 lines per second over USB<br>
 
 Each line is in the following format:<br>
-```[ENC_POS],[ENC_DIR],[MC],[IF],[FS],[SS],[SR]\r\n```<br>
+```[SEQ],[ENC_POS],[ENC_DIR],[MC],[IF],[FS],[SS],[SR]\r\n```<br>
+* SEQ: sequence number starting at 1
 * ENC_POS: the encoder position, not zeroed
 * ENC_DIR: `0` for decreasing, and `1` for increasing
 * MC: Mold Closed state

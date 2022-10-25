@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,8 +41,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-UART_HandleTypeDef huart3;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -49,7 +48,6 @@ UART_HandleTypeDef huart3;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART3_UART_Init(void);
 static void MX_UART4_Init(void);
 static void MX_DMA_Init(void);
 static void MX_TIM5_Init(void);
@@ -91,14 +89,18 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART3_UART_Init();
   MX_UART4_Init();
   MX_DMA_Init();
   MX_TIM5_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
-  uint32_t ms = 0;
+#define BUFFER_SIZE 2048
+  char buffers[3][BUFFER_SIZE];
+  buffers[0][0] = '\r';
+  buffers[0][1] = '\n';
+  size_t chars_in_buffer = 2;
+  uint32_t seq = 0;
   LL_TIM_EnableCounter(TIM7);
   /* USER CODE END 2 */
 
@@ -106,10 +108,44 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  while (!LL_TIM_IsActiveFlag_UPDATE(TIM7));
-	  LL_TIM_ClearFlag_UPDATE(TIM7);
+	  for (size_t buf_idx = 0; buf_idx < 2; buf_idx++)
+	  {
+		  while (chars_in_buffer < BUFFER_SIZE)
+		  {
+			  while (!LL_TIM_IsActiveFlag_UPDATE(TIM7));
+			  LL_TIM_ClearFlag_UPDATE(TIM7);
+			  seq++;
 
-	  ms++;
+			  chars_in_buffer += sprintf(&buffers[buf_idx][chars_in_buffer], "%08lX,%08lX,%X,%X,%X,%X,%X,%X\r\n",
+					  seq,
+					  LL_TIM_GetCounter(TIM5),
+					  HAL_GPIO_ReadPin(ENC_Z_GPIO_Port, ENC_Z_Pin),
+					  HAL_GPIO_ReadPin(SEQ_MC_GPIO_Port, SEQ_MC_Pin),
+					  HAL_GPIO_ReadPin(SEQ_IF_GPIO_Port, SEQ_IF_Pin),
+					  HAL_GPIO_ReadPin(SEQ_FS_GPIO_Port, SEQ_FS_Pin),
+					  HAL_GPIO_ReadPin(SEQ_SS_GPIO_Port, SEQ_SS_Pin),
+					  HAL_GPIO_ReadPin(SEQ_SR_GPIO_Port, SEQ_SR_Pin));
+		  }
+
+		  for (size_t i = 0; i < BUFFER_SIZE; i++)
+		  {
+			  while (!LL_USART_IsActiveFlag_TXE(UART4));
+			  LL_USART_TransmitData8(UART4, buffers[buf_idx][i]);
+		  }
+//			LL_DMA_DisableStream(DMA1, LL_DMA_STREAM_4);
+
+//			DMA_ClearFlagFE(p_tx->p_loc->p_dma_tx->p_dma, p_tx->p_loc->p_dma_tx->stream);
+//			DMA_ClearFlagHT(p_tx->p_loc->p_dma_tx->p_dma, p_tx->p_loc->p_dma_tx->stream);
+//			DMA_ClearFlagTC(p_tx->p_loc->p_dma_tx->p_dma, p_tx->p_loc->p_dma_tx->stream);
+
+//			LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_4, (uint32_t)buffers[buf_idx]);
+//			LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_4, BUFFER_SIZE);
+//			LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_4);
+
+		  // send shit out da UART
+		  chars_in_buffer -= BUFFER_SIZE;
+	  }
+	  memcpy(buffers[0], buffers[2], chars_in_buffer);
 
 
     /* USER CODE END WHILE */
@@ -366,41 +402,6 @@ static void MX_UART4_Init(void)
 }
 
 /**
-  * @brief USART3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART3_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART3_Init 0 */
-
-  /* USER CODE END USART3_Init 0 */
-
-  /* USER CODE BEGIN USART3_Init 1 */
-
-  /* USER CODE END USART3_Init 1 */
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART3_Init 2 */
-
-  /* USER CODE END USART3_Init 2 */
-
-}
-
-/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -431,8 +432,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
