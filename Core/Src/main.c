@@ -51,7 +51,7 @@ static void MX_GPIO_Init(void);
 static void MX_UART4_Init(void);
 static void MX_DMA_Init(void);
 static void MX_TIM5_Init(void);
-static void MX_TIM7_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -96,7 +96,7 @@ int main(void)
   MX_UART4_Init();
   MX_DMA_Init();
   MX_TIM5_Init();
-  MX_TIM7_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   // Don't know why the generated code doesn't do this. It's necessary to operate
@@ -109,7 +109,8 @@ int main(void)
   buffers[0][1] = '\n';
   size_t chars_in_buffer = 2;
   uint32_t seq = 0;
-  LL_TIM_EnableCounter(TIM7);
+
+  LL_TIM_EnableCounter(TIM2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,9 +121,8 @@ int main(void)
 	  {
 		  while (chars_in_buffer < BUFFER_SIZE)
 		  {
-			  while (!LL_TIM_IsActiveFlag_UPDATE(TIM7));
-			  LL_TIM_ClearFlag_UPDATE(TIM7);
 			  seq++;
+			  while (LL_TIM_GetCounter(TIM2) < (seq * 4));
 
 			  chars_in_buffer += sprintf(&buffers[buf_idx][chars_in_buffer], "%08lX,%08lX,%X,%X,%X,%X,%X,%X\r\n",
 					  seq,
@@ -212,6 +212,41 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  LL_TIM_InitTypeDef TIM_InitStruct = {0};
+
+  /* Peripheral clock enable */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  TIM_InitStruct.Prescaler = 24000;
+  TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
+  TIM_InitStruct.Autoreload = 4294967295;
+  TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+  LL_TIM_Init(TIM2, &TIM_InitStruct);
+  LL_TIM_DisableARRPreload(TIM2);
+  LL_TIM_SetClockSource(TIM2, LL_TIM_CLOCKSOURCE_INTERNAL);
+  LL_TIM_SetTriggerOutput(TIM2, LL_TIM_TRGO_RESET);
+  LL_TIM_DisableMasterSlaveMode(TIM2);
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief TIM5 Initialization Function
   * @param None
   * @retval None
@@ -272,41 +307,8 @@ static void MX_TIM5_Init(void)
   LL_TIM_SetTriggerOutput(TIM5, LL_TIM_TRGO_RESET);
   LL_TIM_DisableMasterSlaveMode(TIM5);
   /* USER CODE BEGIN TIM5_Init 2 */
-
+  LL_TIM_SetCounter(TIM5, 0x10000000);
   /* USER CODE END TIM5_Init 2 */
-
-}
-
-/**
-  * @brief TIM7 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM7_Init(void)
-{
-
-  /* USER CODE BEGIN TIM7_Init 0 */
-
-  /* USER CODE END TIM7_Init 0 */
-
-  LL_TIM_InitTypeDef TIM_InitStruct = {0};
-
-  /* Peripheral clock enable */
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
-
-  /* USER CODE BEGIN TIM7_Init 1 */
-
-  /* USER CODE END TIM7_Init 1 */
-  TIM_InitStruct.Prescaler = 96;
-  TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-  TIM_InitStruct.Autoreload = 1000;
-  LL_TIM_Init(TIM7, &TIM_InitStruct);
-  LL_TIM_DisableARRPreload(TIM7);
-  LL_TIM_SetTriggerOutput(TIM7, LL_TIM_TRGO_RESET);
-  LL_TIM_DisableMasterSlaveMode(TIM7);
-  /* USER CODE BEGIN TIM7_Init 2 */
-
-  /* USER CODE END TIM7_Init 2 */
 
 }
 
