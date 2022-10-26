@@ -85,6 +85,10 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+  // This enables the DMA clock. The generated code does this after trying to set values in the UART DMA registers.
+  // But those registers can't be set before the DMA clock is enabled.
+  MX_DMA_Init();
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -94,6 +98,10 @@ int main(void)
   MX_TIM5_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
+
+  // Don't know why the generated code doesn't do this. It's necessary to operate
+  LL_USART_EnableDMAReq_TX(UART4);
+  LL_DMA_SetPeriphAddress(DMA1, LL_DMA_STREAM_4, (uint32_t)&UART4->TDR);
 
 #define BUFFER_SIZE 2048
   char buffers[3][BUFFER_SIZE];
@@ -127,20 +135,11 @@ int main(void)
 					  HAL_GPIO_ReadPin(SEQ_SR_GPIO_Port, SEQ_SR_Pin));
 		  }
 
-		  for (size_t i = 0; i < BUFFER_SIZE; i++)
-		  {
-			  while (!LL_USART_IsActiveFlag_TXE(UART4));
-			  LL_USART_TransmitData8(UART4, buffers[buf_idx][i]);
-		  }
-//			LL_DMA_DisableStream(DMA1, LL_DMA_STREAM_4);
-
-//			DMA_ClearFlagFE(p_tx->p_loc->p_dma_tx->p_dma, p_tx->p_loc->p_dma_tx->stream);
-//			DMA_ClearFlagHT(p_tx->p_loc->p_dma_tx->p_dma, p_tx->p_loc->p_dma_tx->stream);
-//			DMA_ClearFlagTC(p_tx->p_loc->p_dma_tx->p_dma, p_tx->p_loc->p_dma_tx->stream);
-
-//			LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_4, (uint32_t)buffers[buf_idx]);
-//			LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_4, BUFFER_SIZE);
-//			LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_4);
+			LL_DMA_DisableStream(DMA1, LL_DMA_STREAM_4);
+			LL_DMA_ClearFlag_TC4(DMA1);
+			LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_4, (uint32_t)buffers[buf_idx]);
+			LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_4, BUFFER_SIZE);
+			LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_4);
 
 		  // send shit out da UART
 		  chars_in_buffer -= BUFFER_SIZE;
