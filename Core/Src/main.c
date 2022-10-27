@@ -124,7 +124,7 @@ int main(void)
 			  seq++;
 			  while (LL_TIM_GetCounter(TIM2) < (seq * 4));
 
-			  chars_in_buffer += sprintf(&buffers[buf_idx][chars_in_buffer], "%08lX,%08lX,%X,%X,%X,%X,%X,%X\r\n",
+			  chars_in_buffer += sprintf(&buffers[buf_idx][chars_in_buffer], "%lu,%lu,%X,%X,%X,%X,%X,%X\r\n",
 					  seq,
 					  LL_TIM_GetCounter(TIM5),
 					  HAL_GPIO_ReadPin(ENC_Z_GPIO_Port, ENC_Z_Pin),
@@ -141,7 +141,6 @@ int main(void)
 			LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_4, BUFFER_SIZE);
 			LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_4);
 
-		  // send shit out da UART
 		  chars_in_buffer -= BUFFER_SIZE;
 	  }
 	  memcpy(buffers[0], buffers[2], chars_in_buffer);
