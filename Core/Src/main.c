@@ -111,6 +111,7 @@ int main(void)
   uint32_t seq = 0;
 
   LL_TIM_EnableCounter(TIM2);
+  LL_TIM_EnableCounter(TIM5);
   /* USER CODE END 2 */
 
   /* Infinite loop */
