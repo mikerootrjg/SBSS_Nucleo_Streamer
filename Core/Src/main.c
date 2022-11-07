@@ -307,7 +307,7 @@ static void MX_TIM5_Init(void)
   LL_TIM_SetTriggerOutput(TIM5, LL_TIM_TRGO_RESET);
   LL_TIM_DisableMasterSlaveMode(TIM5);
   /* USER CODE BEGIN TIM5_Init 2 */
-  LL_TIM_SetCounter(TIM5, 0x10000000);
+  LL_TIM_SetCounter(TIM5, 1000000000);
   /* USER CODE END TIM5_Init 2 */
 
 }
