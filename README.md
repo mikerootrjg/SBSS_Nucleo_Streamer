@@ -18,16 +18,16 @@ For PA1:
 
 ### Signals should be connected to the Nucleo as follows:
 
-| Signal      | uC Periph ID | uC Pin ID | Nucleo pin  |
-| ----------- | ------------ | --------- | ----------- |
-| Enc A       | TIM5_CH1     | PA0       | CN11 Pin 28 |
-| Enc B       | TIM5_CH2     | PA1       | CN11 Pin 30 |
-| Enc Z       | GPIO Input   | PA4       | CN11 Pin 32 |
-| MC          | GPIO Input   | PD3       | CN11 Pin 40 |
-| IF          | GPIO Input   | PD4       | CN11 Pin 39 |
-| FS          | GPIO Input   | PD5       | CN11 Pin 41 |
-| SS          | GPIO Input   | PD6       | CN11 Pin 43 |
-| SR          | GPIO Input   | PD7       | CN11 Pin 45 |
+| Signal      | uC Periph ID | uC Pin ID | Nucleo pin  | Converter board channel |
+| ----------- | ------------ | --------- | ----------- | ----------------------- |
+| Enc A       | TIM5_CH1     | PA0       | CN11 Pin 28 | |
+| Enc B       | TIM5_CH2     | PA1       | CN11 Pin 30 | |
+| Enc Z       | GPIO Input   | PA4       | CN11 Pin 32 | |
+| MC          | GPIO Input   | PD3       | CN11 Pin 40 | 4
+| IF          | GPIO Input   | PD4       | CN11 Pin 39 | 1
+| FS          | GPIO Input   | PD5       | CN11 Pin 41 | 2
+| SS          | GPIO Input   | PD6       | CN11 Pin 43 | 5
+| SR          | GPIO Input   | PD7       | CN11 Pin 45 | 3
 | Data Out    | UART_TX      | PD1       | CN11 Pin 55 or CN9 Pin 27
 
 ## Output
