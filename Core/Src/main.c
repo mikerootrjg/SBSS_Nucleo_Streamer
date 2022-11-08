@@ -23,6 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include <stdio.h>
+
+#include "data_buffer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,6 +60,17 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+static void send_buffer(void * p_buffer, size_t size)
+{
+	char * str_cast = p_buffer;
+
+	LL_DMA_DisableStream(DMA1, LL_DMA_STREAM_4);
+	LL_DMA_ClearFlag_TC4(DMA1);
+	LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_4, (uint32_t)str_cast);
+	LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_4, size);
+	LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_4);
+}
 
 /* USER CODE END 0 */
 
@@ -103,11 +116,10 @@ int main(void)
   LL_USART_EnableDMAReq_TX(UART4);
   LL_DMA_SetPeriphAddress(DMA1, LL_DMA_STREAM_4, (uint32_t)&UART4->TDR);
 
-#define BUFFER_SIZE 2048
-  char buffers[3][BUFFER_SIZE];
-  buffers[0][0] = '\r';
-  buffers[0][1] = '\n';
-  size_t chars_in_buffer = 2;
+  DATA_BUFFER_HND_T buffer_hnd = data_buffer_create_new(2048, send_buffer);
+  strcpy(data_buffer_get_write_ptr(buffer_hnd), "\r\n\r\n");
+  data_buffer_commit_bytes(buffer_hnd, 4);
+
   uint32_t seq = 0;
 
   LL_TIM_EnableCounter(TIM2);
@@ -118,36 +130,22 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  for (size_t buf_idx = 0; buf_idx < 2; buf_idx++)
-	  {
-		  while (chars_in_buffer < BUFFER_SIZE)
-		  {
-			  seq++;
-			  while (LL_TIM_GetCounter(TIM2) < (seq * 4));
 
-			  chars_in_buffer += sprintf(&buffers[buf_idx][chars_in_buffer], "%lu,%lu,%X,%X,%X,%X,%X,%X\r\n",
-					  seq,
-					  LL_TIM_GetCounter(TIM5),
-					  HAL_GPIO_ReadPin(ENC_Z_GPIO_Port, ENC_Z_Pin),
-					  HAL_GPIO_ReadPin(SEQ_MC_GPIO_Port, SEQ_MC_Pin),
-					  HAL_GPIO_ReadPin(SEQ_IF_GPIO_Port, SEQ_IF_Pin),
-					  HAL_GPIO_ReadPin(SEQ_FS_GPIO_Port, SEQ_FS_Pin),
-					  HAL_GPIO_ReadPin(SEQ_SS_GPIO_Port, SEQ_SS_Pin),
-					  HAL_GPIO_ReadPin(SEQ_SR_GPIO_Port, SEQ_SR_Pin));
-		  }
+	  seq++;
+	  while (LL_TIM_GetCounter(TIM2) < (seq * 4));
 
-			LL_DMA_DisableStream(DMA1, LL_DMA_STREAM_4);
-			LL_DMA_ClearFlag_TC4(DMA1);
-			LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_4, (uint32_t)buffers[buf_idx]);
-			LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_4, BUFFER_SIZE);
-			LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_4);
+	  char * print_buffer = data_buffer_get_write_ptr(buffer_hnd);
+	  int str_size = sprintf(print_buffer, "%lu,%lu,%X,%X,%X,%X,%X,%X\r\n",
+			  seq,
+			  LL_TIM_GetCounter(TIM5),
+			  HAL_GPIO_ReadPin(ENC_Z_GPIO_Port, ENC_Z_Pin),
+			  HAL_GPIO_ReadPin(SEQ_MC_GPIO_Port, SEQ_MC_Pin),
+			  HAL_GPIO_ReadPin(SEQ_IF_GPIO_Port, SEQ_IF_Pin),
+			  HAL_GPIO_ReadPin(SEQ_FS_GPIO_Port, SEQ_FS_Pin),
+			  HAL_GPIO_ReadPin(SEQ_SS_GPIO_Port, SEQ_SS_Pin),
+			  HAL_GPIO_ReadPin(SEQ_SR_GPIO_Port, SEQ_SR_Pin));
 
-		  chars_in_buffer -= BUFFER_SIZE;
-	  }
-	  memcpy(buffers[0], buffers[2], chars_in_buffer);
-
-
-    /* USER CODE END WHILE */
+	  data_buffer_commit_bytes(buffer_hnd, str_size);    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
